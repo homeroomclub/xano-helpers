@@ -1,0 +1,1 @@
+module.exports = {"development":{"airtable":{"secret":"dashkite-airtable-api-key","base":"appiBseIwPbqKwxqi"}}}
