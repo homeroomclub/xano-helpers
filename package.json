@@ -1,0 +1,44 @@
+{
+  "name": "@dashkite/airtable-helpers",
+  "version": "0.0.0",
+  "description": "",
+  "main": "build/node/src/index.js",
+  "exports": {
+    ".": {
+      "node": "./build/node/src/index.js"
+    }
+  },
+  "files": [
+    "build/node/src"
+  ],
+  "scripts": {
+    "test": "genie test"
+  },
+  "keywords": [],
+  "contributors": [
+    {
+      "name": "Dan Yoder",
+      "email": "dan@dashkite.com"
+    },
+    {
+      "name": "David Harper",
+      "email": "david@dashkite.com"
+    }
+  ],
+  "license": "SEE LICENSE IN LICENSE.md",
+  "devDependencies": {
+    "@dashkite/amen": "^0.1.2",
+    "@dashkite/amen-console": "^0.0.1",
+    "@dashkite/assert": "^0.1.4",
+    "@dashkite/genie": "^0.5.6",
+    "@dashkite/genie-presets": "^0.5.6",
+    "@dashkite/sky-presets": "^0.1.1"
+  },
+  "dependencies": {
+    "@dashkite/dolores": "^0.0.9",
+    "@dashkite/joy": "^0.3.16",
+    "airtable": "^0.11.1",
+    "marked": "^4.0.8",
+    "node-fetch": "^2.6.6"
+  }
+}

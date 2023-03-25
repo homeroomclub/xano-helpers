@@ -1,0 +1,25 @@
+presets:
+  verify: null
+  update: null
+  release: null
+  coffeescript:
+    targets:
+      node:
+        - preset: node
+          glob:
+            - '{src,test}/**/*.coffee'
+  pug:
+    targets:
+      node:
+        - preset: compile
+          glob:
+            - "test/**/*.pug"
+  yaml:
+    targets:
+      node:
+        - preset: js
+          options:
+            target: node
+          glob:
+            - "{src,test}/**/*.yaml"
+  esm: null
