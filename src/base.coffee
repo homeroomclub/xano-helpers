@@ -1,108 +1,99 @@
-import * as It from "@dashkite/joy/iterable"
-import { getSecret } from "@dashkite/dolores/secrets"
-import Airtable from "airtable"
+import fetch from "node-fetch"
+import * as Meta from "@dashkite/joy/metaclass"
+import * as Text from "@dashkite/joy/text"
+
+class XanoError extends Error
+  constructor: ( response, message ) ->
+    super( message )
+    @response = response
+    @status = response.status
+
 
 class Base
 
-  @create: ({secret, base}) ->
-    client = new Airtable apiKey: await getSecret secret
-    base = client.base base
-    Object.assign (new @), _: { client, base }
+  @create: ( _ ) ->
+    _.resource = Text.underscore _.name
+    Object.assign ( new @ ), { _ }
 
-  selectOne: ({ table, query }) ->
-    query = ( @_.base table ).select
-      filterByFormula: query
-      maxRecords: 1
-    new Promise (resolve, reject) ->
-      query.firstPage (error, records) ->
-        if error?
-          reject error
-        else
-          resolve records[0]
+  Meta.mixin @::, [
+    Meta.getters
+      id: -> @_.id
+      name: -> @_.name
+      baseURL: -> @_.api
+      swaggerURL: -> @_.swaggerspec
+      resource: -> @_.resource
+  ]
 
-  selectAll: ({ table, query, fields, maxRecords, pageSize, sort, view, cellFormat, timeZone, userLocale }) ->
-    pageSize ?= 100
-    table = @_.base table
-    records = []
-
-    parameters = { pageSize }
-    parameters.fields = fields if fields?
-    parameters.filterByFormula = query if query?
-    parameters.maxRecords = maxRecords if maxRecords?
-    parameters.sort = sort if sort?
-    parameters.view = view if view?
-    parameters.cellFormat = cellFormat if cellFormat?
-    parameters.timeZone = timeZone if timeZone?
-    parameters.userLocale = userLocale if userLocale?
-
-    new Promise (resolve, reject) ->
-      accumulate = (pageRecords, fetchNextPage) ->
-        records.push pageRecords...
-        fetchNextPage()
-
-      done = (error) ->
-        if error?
-          reject error
-        else
-          resolve records
+  list: ->
+    url = "#{ @baseURL }/#{ @resource }"
+    options =
+      method: "GET"
+      headers:
+        Accept: "application/json"
    
-      table
-        .select parameters
-        .eachPage accumulate, done
+    response = await fetch url, options
+    if response.status != 200
+      throw new XanoError response, "xano-helpers: unexpected response status"
 
+    await response.json()
 
-  find: ({ table, id }) ->
-    new Promise (resolve, reject) =>
-      ( @_.base table ).find id, (error, record) ->
-        if error?
-          if error.statusCode == 404
-            resolve()
-          else
-            reject error
-        else
-          resolve record
+  add: ( data = {} ) ->
+    url = "#{ @baseURL }/#{ @resource }"
+    options =
+      method: "POST"
+      headers:
+        "Content-Type": "application/json"
+        Accept: "application/json"
+      body: JSON.stringify data
 
-  findAll: ({ table, ids }) ->
-    @selectAll
-      table: table
-      query: do ->
-        conditions = do ->
-          for id in ids
-            "RECORD_ID() = '#{id}'"
-        "OR( #{ It.join ", ", conditions })"
+    response = await fetch url, options
+    if response.status != 200
+      throw new XanoError response, "xano-helpers: unexpected response status"
 
-  create: ({ table, records }) ->
-    new Promise ( resolve, reject ) =>
-      ( @_.base table ).create ( fields: record for record in records ), ( error, records ) ->
-        if error?
-          reject error
-        else
-          resolve records
+    await response.json()
 
+  get: ( id ) ->
+    url = "#{ @baseURL }/#{ @resource }/#{ encodeURIComponent id }"
+    options =
+      method: "GET"
+      headers:
+        Accept: "application/json"
 
-  update: ({ table, id, fields }) ->
-    new Promise ( resolve, reject ) =>
-      ( @_.base table ).update [ { id, fields } ], (error, records) ->
-        if error?
-          reject error
-        else
-          resolve records[0]
+    response = await fetch url, options
+    if response.status == 404
+      return undefined
+    if response.status != 200
+      throw new XanoError response, "xano-helpers: unexpected response status"
 
-  replace: ({ table, id, fields }) ->
-    new Promise ( resolve, reject ) =>
-      ( @_.base table ).replace [ { id, fields } ], (error, records) ->
-        if error?
-          reject error
-        else
-          resolve records[0]
+    await response.json()
 
-  delete: ({ table, id }) ->
-    new Promise ( resolve, reject ) =>
-      ( @_.base table ).destroy id, (error, records) ->
-        if error?
-          reject error
-        else
-          resolve()
+  update: ( data ) ->
+    url = "#{ @baseURL }/#{ @resource }/#{ encodeURIComponent data.id }"
+    options =
+      method: "POST"
+      headers:
+        "Content-Type": "application/json"
+        Accept: "application/json"
+      body: JSON.stringify data
+
+    response = await fetch url, options
+    if response.status != 200
+      throw new XanoError response, "xano-helpers: unexpected response status"
+    
+    await response.json()
+
+  delete: ( id ) ->
+    url = "#{ @baseURL }/#{ @resource }/#{ encodeURIComponent id }"
+    options =
+      method: "DELETE"
+      headers: {}
+    
+    response = await fetch url, options
+    if response.status != 200
+      throw new XanoError response, "xano-helpers: unexpected response status"
+
+    await response.json()
+
 
 export {
   Base

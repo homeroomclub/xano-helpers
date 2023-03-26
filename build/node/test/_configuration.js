@@ -1,1 +1,1 @@
-module.exports = {"development":{"airtable":{"secret":"dashkite-airtable-api-key","base":"appiBseIwPbqKwxqi"}}}
+module.exports = {"development":{"xano":{"secret":"xano-api-key","instance":"HomeRoom","workspace":"Harmony","bases":["TestPeople"]}}}

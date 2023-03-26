@@ -1,5 +1,5 @@
 {
-  "name": "@dashkite/airtable-helpers",
+  "name": "@dashkite/xano-helpers",
   "version": "0.0.0",
   "description": "",
   "main": "build/node/src/index.js",
@@ -31,14 +31,13 @@
     "@dashkite/amen-console": "^0.0.1",
     "@dashkite/assert": "^0.1.4",
     "@dashkite/genie": "^0.5.6",
-    "@dashkite/genie-presets": "^0.5.6",
-    "@dashkite/sky-presets": "^0.1.1"
+    "@dashkite/genie-presets": "^0.6.4",
+    "@dashkite/sky-presets": "^0.1.1",
+    "panda-confidential": "^3.1.2"
   },
   "dependencies": {
     "@dashkite/dolores": "^0.0.9",
     "@dashkite/joy": "^0.3.16",
-    "airtable": "^0.11.1",
-    "marked": "^4.0.8",
-    "node-fetch": "^2.6.6"
+    "node-fetch": "^2.6.9"
   }
 }

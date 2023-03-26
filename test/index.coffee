@@ -1,13 +1,11 @@
 import { test as _test, success } from "@dashkite/amen"
 import print from "@dashkite/amen-console"
 import assert from "@dashkite/assert"
+import * as h from "./helpers"
 
 import configuration from "./configuration"
 
-import { Base } from "../src/base"
-import { Site, Page, Content } from "../src"
-
-import html from "./helpers/html"
+import { Xano } from "../src"
 
 test = (name, f) ->
   _test
@@ -15,104 +13,45 @@ test = (name, f) ->
     wait: 30000
     f
 
-do ({ base, record } = {}) ->
+do ({ xano, base, person } = {}) ->
 
-  print await _test "Airtable Helpers", [
+  print await _test "Xano Helpers", [
 
-    await _test "Base", [
+    await test "setup", ->
+      xano = await Xano.create configuration.xano
+      assert ( Object.keys xano.bases ).length > 0
+      base = xano.bases[ "TestPeople" ]
 
-      await test "create", ->
-        base = await Base.create configuration.airtable
-        await base.create
-          table: "Test"
-          records: [
-            "Name": "Test"
-            "Notes": "This is a test."
-          ]
+    await test "add record", ->
+      person = await base.add
+        first_name: "David"
+        last_name: "Test"
+        workspace: await h.random()
 
-      await _test "find", [
-        
-        test "single", ->
-          record = await base.find 
-            table: "Pagination Test"
-            id: "recqH6NNMug5nFtC2"
-          assert record?
+    await test "list records", ->
+      list = await base.list()
+      match = list.find ( record ) -> record.id == person.id
+      assert match?
 
-        test "multiple", ->
-          record = await base.findAll
-            table: "Pagination Test"
-            ids: [ "recqH6NNMug5nFtC2", "rec1HIU8rDLhLgW9g" ]
-          assert.equal 2, record.length
-          
-        test "single not found", ->
-          record = await base.find 
-            table: "Pagination Test"
-            id: "foobar"
-          assert !record?
+    await test "get record", ->
+      _person = await base.get person.id
+      assert.deepEqual person, _person
 
-        test "multiple not found", ->
-          record = await base.findAll
-            table: "Pagination Test"
-            ids: [ "foo", "bar" ]
-          assert.equal 0, record.length
-      
-      ]
+    await test "update record", ->
+      _person = await base.update {
+        person...
+        last_name: "Updated"
+      }
 
-      await test "selectOne", ->
-        record = await base.selectOne
-          table: "Test"
-          query: "{Name} = 'Test'"
-        assert.equal "Test", record.get "Name"
+      assert.equal person.id, _person.id
+      assert.equal "Updated", _person.last_name
 
-      await test "selectAll", ->
-        records = await base.selectAll
-          table: "Pagination Test"
-        assert.equal 110, records.length
-
-      await test "update", ->
-
-        notes = record.get "Notes"
-
-        if notes == "This is a test."
-          notes = "This is not a test."
-        else
-          notes = "This is a test."
-
-        record = await base.update
-          table: "Test"
-          id: record.id
-          fields:
-            Notes: notes
-        
-        assert.equal notes, record.get "Notes"
-
-      await test "replace", ->
-
-        notes = record.get "Notes"
-
-        if notes == "This is a test."
-          notes = "This is not a test."
-        else
-          notes = "This is a test."
-
-        record = await base.replace
-          table: "Test"
-          id: record.id
-          fields:
-            Notes: notes
-        
-        assert.equal notes, record.get "Notes"
-
-      await test "delete", ->
-        await base.delete
-          table: "Test"
-          id: record.id
-
-    ]
-
+    await test "delete record", ->
+      await base.delete person.id
+      _person = await base.get person.id
+      assert !_person?
 
   ]
 
   
   process.exit success
-

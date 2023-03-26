@@ -1,4 +1,7 @@
 development:
-  airtable:
-    secret: dashkite-airtable-api-key
-    base: appiBseIwPbqKwxqi
+  xano:
+    secret: xano-api-key
+    instance: HomeRoom
+    workspace: Harmony
+    bases:
+      - TestPeople
