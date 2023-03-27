@@ -1,12 +1,18 @@
 import fetch from "node-fetch"
 import * as Meta from "@dashkite/joy/metaclass"
 import * as Text from "@dashkite/joy/text"
+import r from "./request"
 
 class XanoError extends Error
   constructor: ( response, message ) ->
     super( message )
     @response = response
     @status = response.status
+
+success = ( status, response ) ->
+  if response.status != status
+    throw new XanoError response, 
+      "xano-helpers: unexpected response status #{ response.status }"
 
 
 class Base
@@ -24,74 +30,105 @@ class Base
       resource: -> @_.resource
   ]
 
-  list: ->
-    url = "#{ @baseURL }/#{ @resource }"
-    options =
-      method: "GET"
-      headers:
+  loadSwagger: ->
+    response = await fetch @swaggerURL
+    console.log await response.json()
+
+  list: ( config = {} )->
+    request = r.createRequest [
+      r.base @baseURL
+      r.path "/#{ @resource }"
+      r.method "get"
+      r.query config.query
+      r.headers {
         Accept: "application/json"
+        config.headers...
+      }
+      r.token config.token
+    ]
    
-    response = await fetch url, options
-    if response.status != 200
-      throw new XanoError response, "xano-helpers: unexpected response status"
-
+    response = await request.issue()
+    success 200, response
     await response.json()
 
-  add: ( data = {} ) ->
-    url = "#{ @baseURL }/#{ @resource }"
-    options =
-      method: "POST"
-      headers:
-        "Content-Type": "application/json"
+  add: ( config = {} ) ->
+    request = r.createRequest [
+      r.base @baseURL
+      r.path "/#{ @resource }"
+      r.method "post"
+      r.query config.query
+      r.content config.content
+      r.headers {
         Accept: "application/json"
-      body: JSON.stringify data
-
-    response = await fetch url, options
-    if response.status != 200
-      throw new XanoError response, "xano-helpers: unexpected response status"
-
+        config.headers...
+      }
+      r.token config.token
+    ]
+   
+    response = await request.issue()
+    success 200, response
     await response.json()
 
-  get: ( id ) ->
-    url = "#{ @baseURL }/#{ @resource }/#{ encodeURIComponent id }"
-    options =
-      method: "GET"
-      headers:
+  get: ( config = {} ) ->
+    # TODO: Is there a convention we like more here?
+    id = encodeURIComponent config.id
+
+    request = r.createRequest [
+      r.base @baseURL
+      r.path "/#{ @resource }/#{ id }"
+      r.method "get"
+      r.query config.query
+      r.headers {
         Accept: "application/json"
-
-    response = await fetch url, options
-    if response.status == 404
-      return undefined
-    if response.status != 200
-      throw new XanoError response, "xano-helpers: unexpected response status"
-
+        config.headers...
+      }
+      r.token config.token
+    ]
+   
+    response = await request.issue()
+    return if response.status == 404
+    success 200, response
     await response.json()
 
-  update: ( data ) ->
-    url = "#{ @baseURL }/#{ @resource }/#{ encodeURIComponent data.id }"
-    options =
-      method: "POST"
-      headers:
-        "Content-Type": "application/json"
+  update: ( config = {} ) ->
+    # TODO: Is there a convention we like more here?
+    id = encodeURIComponent config.content.id
+
+    request = r.createRequest [
+      r.base @baseURL
+      r.path "/#{ @resource }/#{ id }"
+      r.method "post"
+      r.query config.query
+      r.content config.content
+      r.headers {
         Accept: "application/json"
-      body: JSON.stringify data
-
-    response = await fetch url, options
-    if response.status != 200
-      throw new XanoError response, "xano-helpers: unexpected response status"
-    
+        config.headers...
+      }
+      r.token config.token
+    ]
+   
+    response = await request.issue()
+    success 200, response
     await response.json()
 
-  delete: ( id ) ->
-    url = "#{ @baseURL }/#{ @resource }/#{ encodeURIComponent id }"
-    options =
-      method: "DELETE"
-      headers: {}
-    
-    response = await fetch url, options
-    if response.status != 200
-      throw new XanoError response, "xano-helpers: unexpected response status"
+  delete: ( config = {} ) ->
+    # TODO: Is there a convention we like more here?
+    id = encodeURIComponent config.id
 
+    request = r.createRequest [
+      r.base @baseURL
+      r.path "/#{ @resource }/#{ id }"
+      r.method "delete"
+      r.query config.query
+      r.headers {
+        Accept: "application/json"
+        config.headers...
+      }
+      r.token config.token
+    ]
+   
+    response = await request.issue()
+    success 200, response
     await response.json()
 
 

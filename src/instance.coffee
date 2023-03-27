@@ -10,9 +10,14 @@ class Instance
 
   Meta.mixin @::, [
     Meta.getters
-      token: -> @_.authToken
+      swaggerURL: -> @_.swaggerspec
+      token: -> @_.authToken    
       baseURL: -> @_.origin
   ]
+
+  loadSwagger: ->
+    response = await fetch @_.swaggerspec
+    console.log await response.json()
 
   getWorkspaces: ->
     url = "#{ @baseURL }/api:developer/workspace"
